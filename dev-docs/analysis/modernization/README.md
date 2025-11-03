@@ -1,28 +1,90 @@
 # SieveEditor Modernization Analysis
 
-This directory contains a comprehensive analysis of the SieveEditor codebase and a detailed plan for modernization.
+This directory contains a comprehensive analysis of the SieveEditor codebase and two implementation approaches: **Pragmatic (5 days)** and **Enterprise (12 weeks)**.
+
+## ⚠️ Read This First
+
+After reviewing user feedback, we have **TWO** approaches documented:
+
+### 🎯 Pragmatic Approach (RECOMMENDED)
+- **Timeline:** 5 days
+- **Philosophy:** "Das ist eine Mini-App. Don't overdo patterns."
+- **Focus:** Fix real user problems, keep it simple
+- **Start here:** [05-real-world-issues.md](05-real-world-issues.md)
+
+### 🏢 Enterprise Approach (Reference)
+- **Timeline:** 12 weeks
+- **Philosophy:** Full modernization with enterprise patterns
+- **Focus:** 80% test coverage, complete refactoring
+- **Use if:** App becomes mission-critical or you have the time
 
 ## Overview
 
 The SieveEditor is a Java 11 Swing desktop application for editing Sieve mail filter scripts on ManageSieve-compatible servers. While functional, it currently has:
 
-- **2 CRITICAL security vulnerabilities**
-- **2 CRITICAL bugs**
+- **2 CRITICAL security vulnerabilities** (both approaches fix these!)
+- **2 CRITICAL bugs** (both approaches fix these!)
+- **1 NEW CRITICAL issue:** 4K display scaling (discovered from user feedback)
 - **15 HIGH priority issues**
 - **0% test coverage**
-- **Significant testability problems**
 
 ## Analysis Documents
 
-### [00-executive-summary.md](00-executive-summary.md)
-**Start here!** High-level overview of findings and recommendations.
+### 🎯 PRAGMATIC APPROACH (Start Here!)
+
+#### [05-real-world-issues.md](05-real-world-issues.md) ⭐ **START HERE**
+Practical 5-day plan based on actual user feedback.
 
 **Contents:**
-- Critical security vulnerabilities
-- Critical bugs
-- Current state assessment
-- ROI analysis
-- Immediate recommendations
+- Real user problems with context
+- 4K display scaling investigation
+- Find/Replace fix (actually broken!)
+- Multi-account support
+- Simple solutions, no over-engineering
+- Day-by-day implementation plan
+
+**Read time:** 15 minutes
+**Implementation time:** 5 days
+
+---
+
+#### [06-4k-scaling-investigation.md](06-4k-scaling-investigation.md)
+Detailed investigation of HiDPI/4K display scaling issue.
+
+**Contents:**
+- 6 hypotheses with test procedures
+- Step-by-step testing scripts
+- 4 solution options (launcher script recommended)
+- Environment detection code
+- Testing results template
+
+**Read time:** 20 minutes
+
+---
+
+#### [00-executive-summary-revised.md](00-executive-summary-revised.md)
+Comparison of pragmatic vs enterprise approaches.
+
+**Contents:**
+- What changed after user feedback
+- Why 5 days instead of 12 weeks
+- Both approaches explained
+- Philosophy: Keep it simple
+
+**Read time:** 10 minutes
+
+---
+
+### 🏢 ENTERPRISE APPROACH (Reference)
+
+#### [00-executive-summary.md](00-executive-summary.md)
+High-level overview of comprehensive 12-week modernization.
+
+**Contents:**
+- All security vulnerabilities
+- All bugs cataloged
+- ROI analysis for enterprise approach
+- 80% test coverage plan
 
 **Read time:** 10 minutes
 
@@ -93,16 +155,36 @@ Week-by-week implementation plan for 12-week modernization.
 
 ## Quick Start Guide
 
-### For Project Managers
+### For Everyone: Which Approach Should You Use?
 
-1. Read [00-executive-summary.md](00-executive-summary.md) for the big picture
-2. Review Phase 1 of [04-implementation-roadmap.md](04-implementation-roadmap.md#phase-1-critical-security-fixes-week-2)
-3. Understand the risks in the Security section
-4. Make go/no-go decision
+**Use Pragmatic (5 days) if:**
+- ✅ You want to fix real user problems quickly
+- ✅ This is a small utility app for you/your team
+- ✅ You value simplicity over perfection
+- ✅ You don't need 80% test coverage
+- ✅ **User said:** "Don't overdo patterns, decoupling und was weiß der geier"
 
-**Key Decision Point:** Do we fix the CRITICAL security issues immediately (4 weeks) or proceed with full modernization (12 weeks)?
+**Use Enterprise (12 weeks) if:**
+- ⚠️ This becomes mission-critical infrastructure
+- ⚠️ You have regulatory compliance requirements
+- ⚠️ You need extensive test coverage for audits
+- ⚠️ Multiple teams will maintain this
+- ⚠️ You have 12 weeks to spend
 
-### For Developers
+**Most users should choose: Pragmatic approach ✅**
+
+---
+
+### For Developers (Pragmatic Approach)
+
+1. Read [05-real-world-issues.md](05-real-world-issues.md) - **15 minutes**
+2. Read [06-4k-scaling-investigation.md](06-4k-scaling-investigation.md) for 4K fix - **20 minutes**
+3. Start with Day 1 tasks (4K scaling + Find/Replace) - **4 hours**
+4. Continue with Days 2-5 as time permits
+
+**Start Coding:** Day 1, Task 1 in [05-real-world-issues.md](05-real-world-issues.md)
+
+### For Developers (Enterprise Approach)
 
 1. Skim [00-executive-summary.md](00-executive-summary.md)
 2. Read [01-security-vulnerabilities.md](01-security-vulnerabilities.md) thoroughly
@@ -110,7 +192,21 @@ Week-by-week implementation plan for 12-week modernization.
 4. Review [03-test-strategy.md](03-test-strategy.md) for testing approach
 5. Use [04-implementation-roadmap.md](04-implementation-roadmap.md) as daily reference
 
-**Start Coding:** Begin with Phase 0, Week 1 tasks in the roadmap
+**Start Coding:** Phase 0, Week 1 tasks in the roadmap
+
+### For Project Managers
+
+**Pragmatic Decision:**
+- Read [05-real-world-issues.md](05-real-world-issues.md)
+- Timeline: 5 days
+- Cost: ~40 hours
+- Outcome: Fixed app, happy users
+
+**Enterprise Decision:**
+- Read [00-executive-summary.md](00-executive-summary.md)
+- Timeline: 12 weeks
+- Cost: ~480 hours
+- Outcome: Enterprise-grade codebase
 
 ### For Security Reviewers
 
