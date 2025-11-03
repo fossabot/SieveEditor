@@ -24,3 +24,8 @@ hs_err_pid*
 /target/
 .idea
 SieveEditor.iml
+
+#Eclipse
+.project
+.classpath
+.settings
