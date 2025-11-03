@@ -9,6 +9,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -25,62 +26,83 @@ public class ActionReplace extends AbstractAction {
 	private Application parentFrame;
 
 	public ActionReplace(Application parentFrame) {
-		putValue("Name", "Save");
+		putValue("Name", "Find/Replace");
 		this.parentFrame = parentFrame;
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		final JDialog frame = new JDialog(parentFrame, "Find", true);
+
 		JPanel panel = new JPanel();
 		panel.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-		GridLayout layout = new GridLayout(5, 2, 6, 6);
+		GridLayout layout = new GridLayout(4, 2, 6, 6);
 		panel.setLayout(layout);
 
-		final JDialog frame = new JDialog(parentFrame, "Connection", true);
-		frame.getContentPane().add(panel);
-		frame.setSize(300, 200);
-		frame.setLocationRelativeTo(parentFrame);
-
-		// Create a toolbar with searching options.
+		// Search field
+		panel.add(new JLabel("Find:"));
 		searchField = new JTextField(30);
-		frame.add(searchField);
-		final JButton nextButton = new JButton("Find Next");
-		nextButton.setActionCommand("FindNext");
-		nextButton.addActionListener(this);
-		frame.add(nextButton);
 		searchField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// "FindNext" => search forward, "FindPrev" => search backward
-				String command = e.getActionCommand();
-				boolean forward = "FindNext".equals(command);
-
-				// Create an object defining our search parameters.
-				SearchContext context = new SearchContext();
-				String text = searchField.getText();
-				if (text.length() == 0) {
-					return;
-				}
-				context.setSearchFor(text);
-				context.setMatchCase(matchCaseCB.isSelected());
-				context.setRegularExpression(regexCB.isSelected());
-				context.setSearchForward(forward);
-				context.setWholeWord(false);
-
-				boolean found = SearchEngine.find(parentFrame.getScriptArea(), context).wasFound();
-				if (!found) {
-					JOptionPane.showMessageDialog(frame, "Text not found");
-				}
+				performSearch(true, frame);
 			}
 		});
+		panel.add(searchField);
+
+		// Find Next button
+		panel.add(new JLabel("")); // Empty label for spacing
+		final JButton nextButton = new JButton("Find Next");
+		nextButton.setActionCommand("FindNext");
+		nextButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				performSearch(true, frame);
+			}
+		});
+		panel.add(nextButton);
+
+		// Find Previous button
+		panel.add(new JLabel("")); // Empty label for spacing
 		JButton prevButton = new JButton("Find Previous");
 		prevButton.setActionCommand("FindPrev");
-		prevButton.addActionListener(this);
-		frame.add(prevButton);
+		prevButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				performSearch(false, frame);
+			}
+		});
+		panel.add(prevButton);
+
+		// Options
 		regexCB = new JCheckBox("Regex");
-		frame.add(regexCB);
+		panel.add(regexCB);
 		matchCaseCB = new JCheckBox("Match Case");
-		frame.add(matchCaseCB);
-		
+		panel.add(matchCaseCB);
+
+		frame.getContentPane().add(panel);
+		frame.pack(); // Auto-size instead of fixed 300x200
+		frame.setLocationRelativeTo(parentFrame);
 		frame.setVisible(true);
+	}
+
+	private void performSearch(boolean forward, JDialog dialog) {
+		// Create an object defining our search parameters.
+		SearchContext context = new SearchContext();
+		String text = searchField.getText();
+		if (text.length() == 0) {
+			JOptionPane.showMessageDialog(dialog,
+				"Please enter text to search for",
+				"Empty Search", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		context.setSearchFor(text);
+		context.setMatchCase(matchCaseCB.isSelected());
+		context.setRegularExpression(regexCB.isSelected());
+		context.setSearchForward(forward);
+		context.setWholeWord(false);
+		context.setSearchWrap(true);
+
+		boolean found = SearchEngine.find(parentFrame.getScriptArea(), context).wasFound();
+		if (!found) {
+			JOptionPane.showMessageDialog(dialog, "Text not found");
+		}
 	}
 }

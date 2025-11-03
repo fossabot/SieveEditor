@@ -70,8 +70,8 @@ public class Application extends JFrame {
 
 		JMenu edit = new JMenu("Edit");
 		menu.add(edit);
-		
-		edit.add(new JMenuItem(actionReplace));
+
+		edit.add(new JMenuItem(actionReplace)).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
 		
 		setJMenuBar(menu);
 
