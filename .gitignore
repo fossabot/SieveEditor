@@ -29,3 +29,5 @@ SieveEditor.iml
 .project
 .classpath
 .settings
+
+**/target/
