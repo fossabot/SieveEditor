@@ -1,0 +1,3 @@
+[submodule "lib/ManageSieveJ"]
+	path = lib/ManageSieveJ
+	url = https://github.com/Zwixx/ManageSieveJ.git
