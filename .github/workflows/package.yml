@@ -1,0 +1,324 @@
+name: Package
+
+on:
+  workflow_dispatch:  # Manual trigger for testing
+    inputs:
+      version:
+        description: 'Version to package (e.g., 0.0.1)'
+        required: true
+        default: '0.0.1'
+  release:
+    types: [published]  # Trigger when release is published
+
+permissions:
+  contents: read
+  id-token: write  # For artifact attestations
+  attestations: write  # For provenance
+
+jobs:
+  # Build JAR once, use for all platforms
+  build-jar:
+    name: Build JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build ManageSieveJ
+        run: |
+          cd lib/ManageSieveJ
+          mvn clean install -DskipTests
+
+      - name: Build JAR
+        run: |
+          cd app
+          mvn clean package -DskipTests -B
+
+      - name: Upload JAR for packaging
+        uses: actions/upload-artifact@v4
+        with:
+          name: sieveeditor-jar
+          path: app/target/SieveEditor-jar-with-dependencies.jar
+          retention-days: 1
+
+  # Linux packaging: DEB, RPM
+  package-linux:
+    name: Package Linux (${{ matrix.package-type }})
+    runs-on: ubuntu-latest
+    needs: build-jar
+    strategy:
+      matrix:
+        package-type: [deb, rpm]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Install packaging tools
+        run: |
+          if [ "${{ matrix.package-type }}" = "deb" ]; then
+            sudo apt-get update
+            sudo apt-get install -y fakeroot
+          elif [ "${{ matrix.package-type }}" = "rpm" ]; then
+            sudo apt-get update
+            sudo apt-get install -y rpm
+          fi
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: sieveeditor-jar
+          path: app/target
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"  # Remove 'v' prefix
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="0.0.1-SNAPSHOT"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Create package
+        run: |
+          jpackage \
+            --input app/target \
+            --main-jar SieveEditor-jar-with-dependencies.jar \
+            --main-class de.febrildur.sieveeditor.Application \
+            --name SieveEditor \
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "SieveEditor Project" \
+            --description "ManageSieve script editor for managing email filtering rules" \
+            --copyright "Copyright 2025 SieveEditor Contributors" \
+            --type ${{ matrix.package-type }} \
+            --linux-shortcut \
+            --linux-menu-group "Network;Email" \
+            --linux-app-category "Network" \
+            --java-options '-Dsun.java2d.uiScale=2.0'
+
+      - name: Find package file
+        id: package
+        run: |
+          if [ "${{ matrix.package-type }}" = "deb" ]; then
+            PKG=$(ls sieveeditor_*.deb)
+          elif [ "${{ matrix.package-type }}" = "rpm" ]; then
+            PKG=$(ls sieveeditor-*.rpm)
+          fi
+          echo "file=$PKG" >> $GITHUB_OUTPUT
+          echo "Package created: $PKG"
+          ls -lh $PKG
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sieveeditor-${{ matrix.package-type }}
+          path: ${{ steps.package.outputs.file }}
+          retention-days: 30
+
+      - name: Attest package provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.package.outputs.file }}
+
+  # Windows packaging: MSI
+  package-windows:
+    name: Package Windows (MSI)
+    runs-on: windows-latest
+    needs: build-jar
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Install WiX Toolset
+        run: |
+          choco install wixtoolset -y
+          echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: sieveeditor-jar
+          path: app/target
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="0.0.1"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Create MSI package
+        shell: cmd
+        run: |
+          jpackage ^
+            --input app\target ^
+            --main-jar SieveEditor-jar-with-dependencies.jar ^
+            --main-class de.febrildur.sieveeditor.Application ^
+            --name SieveEditor ^
+            --app-version ${{ steps.version.outputs.version }} ^
+            --vendor "SieveEditor Project" ^
+            --description "ManageSieve script editor" ^
+            --copyright "Copyright 2025 SieveEditor Contributors" ^
+            --type msi ^
+            --win-dir-chooser ^
+            --win-menu ^
+            --win-shortcut ^
+            --win-menu-group "SieveEditor" ^
+            --java-options "-Dsun.java2d.uiScale=2.0"
+
+      - name: Find MSI file
+        id: package
+        shell: bash
+        run: |
+          MSI=$(ls SieveEditor-*.msi)
+          echo "file=$MSI" >> $GITHUB_OUTPUT
+          echo "Package created: $MSI"
+          ls -lh $MSI
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sieveeditor-msi
+          path: ${{ steps.package.outputs.file }}
+          retention-days: 30
+
+      - name: Attest package provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.package.outputs.file }}
+
+  # macOS packaging: DMG
+  package-macos:
+    name: Package macOS (DMG)
+    runs-on: macos-latest
+    needs: build-jar
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: sieveeditor-jar
+          path: app/target
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="0.0.1"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Create DMG package
+        run: |
+          jpackage \
+            --input app/target \
+            --main-jar SieveEditor-jar-with-dependencies.jar \
+            --main-class de.febrildur.sieveeditor.Application \
+            --name SieveEditor \
+            --app-version ${{ steps.version.outputs.version }} \
+            --vendor "SieveEditor Project" \
+            --description "ManageSieve script editor" \
+            --copyright "Copyright 2025 SieveEditor Contributors" \
+            --type dmg \
+            --mac-package-name "SieveEditor" \
+            --mac-package-identifier "de.febrildur.sieveeditor" \
+            --java-options '-Dsun.java2d.uiScale=2.0'
+
+      - name: Find DMG file
+        id: package
+        run: |
+          DMG=$(ls SieveEditor-*.dmg)
+          echo "file=$DMG" >> $GITHUB_OUTPUT
+          echo "Package created: $DMG"
+          ls -lh $DMG
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sieveeditor-dmg
+          path: ${{ steps.package.outputs.file }}
+          retention-days: 30
+
+      - name: Attest package provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ steps.package.outputs.file }}
+
+  # Generate checksums and attestations summary
+  checksums:
+    name: Generate Checksums
+    runs-on: ubuntu-latest
+    needs: [build-jar, package-linux, package-windows, package-macos]
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd artifacts
+          find . -type f \( -name "*.jar" -o -name "*.deb" -o -name "*.rpm" -o -name "*.msi" -o -name "*.dmg" \) -exec sha256sum {} \; > ../checksums.txt
+          cd ..
+          echo "=== Checksums ==="
+          cat checksums.txt
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: checksums.txt
+          retention-days: 90
