@@ -48,7 +48,6 @@ class ConnectAndListScriptsTest {
     void shouldIndicateLoggedInWhenConnected() throws IOException, ParseException {
         // Given
         PropertiesSieve props = createTestProperties();
-        when(mockResponse.isOk()).thenReturn(true);
 
         // Note: This test demonstrates the intended behavior
         // In reality, we can't easily inject the mock client without refactoring
