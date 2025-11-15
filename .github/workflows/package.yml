@@ -354,7 +354,7 @@ jobs:
           retention-days: 30
 
       - name: Attest Flatpak provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: SieveEditor-${{ steps.version.outputs.version }}.flatpak
 
