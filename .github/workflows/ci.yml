@@ -131,6 +131,9 @@ jobs:
           mvn org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=7 \
             -DsuppressionFile=../owasp-suppressions.xml || true
+        env:
+          OSSINDEX_USER: ${{ secrets.OSSINDEX_USER }}
+          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
         continue-on-error: true  # Don't fail build yet, just report
 
       - name: Upload OWASP report

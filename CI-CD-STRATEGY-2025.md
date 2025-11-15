@@ -758,10 +758,30 @@ chmod +x .git/hooks/pre-commit
 ### 4. Local Security Scanning
 
 **OWASP Dependency Check:**
-```bash
-mvn org.owasp:dependency-check-maven:check
-# Report: app/target/dependency-check-report.html
-```
+
+⚠️ **OSS Index Authentication Required** (as of 2025):
+OSS Index now requires authentication for vulnerability scanning. Set up credentials:
+
+1. **Get OSS Index Token:**
+   - Visit https://ossindex.sonatype.org/
+   - Create an account or sign in
+   - Generate an API token
+
+2. **Set Environment Variables:**
+   ```bash
+   export OSSINDEX_USER="your-email@example.com"
+   export OSSINDEX_TOKEN="your-api-token-here"
+   ```
+
+3. **Run Security Scan:**
+   ```bash
+   # Using test script (recommended)
+   ./scripts/test-local.sh --security
+
+   # Or directly with Maven
+   mvn org.owasp:dependency-check-maven:check
+   # Report: app/target/dependency-check-report.html
+   ```
 
 **Check for Outdated Dependencies:**
 ```bash

@@ -114,6 +114,16 @@ if [ "$1" == "--security" ]; then
     echo "============================================"
     echo "Step 6: Running security scan"
     echo "============================================"
+
+    # Check if OSS Index credentials are set
+    if [ -z "$OSSINDEX_USER" ] || [ -z "$OSSINDEX_TOKEN" ]; then
+        echo "⚠️  Warning: OSS Index credentials not set"
+        echo "   Set OSSINDEX_USER and OSSINDEX_TOKEN environment variables"
+        echo "   to enable full vulnerability scanning with OSS Index"
+        echo "   Get credentials at: https://ossindex.sonatype.org/"
+        echo ""
+    fi
+
     mvn org.owasp:dependency-check-maven:check
     echo "Security report: app/target/dependency-check-report.html"
     echo ""
