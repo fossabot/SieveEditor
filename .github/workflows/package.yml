@@ -137,7 +137,7 @@ jobs:
           retention-days: 30
 
       - name: Attest package provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.package.outputs.file }}
 
@@ -219,7 +219,7 @@ jobs:
           retention-days: 30
 
       - name: Attest package provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.package.outputs.file }}
 
@@ -291,7 +291,7 @@ jobs:
           retention-days: 30
 
       - name: Attest package provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ steps.package.outputs.file }}
 
