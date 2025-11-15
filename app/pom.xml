@@ -54,7 +54,7 @@
 				<version>3.2.3</version>
 			</plugin>
 
-			<!-- JaCoCo for code coverage (temporarily disabled due to network issues) -->
+			<!-- JaCoCo for code coverage (commented out - network issues) -->
 			<!--
 			<plugin>
 				<groupId>org.jacoco</groupId>
