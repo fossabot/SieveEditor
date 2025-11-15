@@ -1,0 +1,3 @@
+# Icon placeholder
+# Replace this with actual 256x256 PNG icon
+# For now, creating a symbolic link to skip icon installation in Flatpak build

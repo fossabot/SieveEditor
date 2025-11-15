@@ -1,0 +1,73 @@
+app-id: de.febrildur.sieveeditor
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.openjdk21
+
+command: sieveeditor
+
+finish-args:
+  # X11 access for Swing GUI
+  - --socket=x11
+  # Network access for ManageSieve connections
+  - --share=network
+  # Allow access to home directory for profile storage
+  - --filesystem=~/.sieveprofiles:create
+  # Persist data between runs
+  - --persist=.sieveprofiles
+
+modules:
+  - name: openjdk
+    buildsystem: simple
+    build-commands:
+      - /usr/lib/sdk/openjdk21/install.sh
+
+  - name: sieveeditor
+    buildsystem: simple
+    build-commands:
+      # Create application directory
+      - install -d /app/sieveeditor
+
+      # Install JAR
+      - install -Dm644 SieveEditor-jar-with-dependencies.jar /app/sieveeditor/SieveEditor.jar
+
+      # Create launcher script
+      - |
+        cat > /app/bin/sieveeditor <<'EOF'
+        #!/bin/sh
+        # SieveEditor launcher script
+        exec /usr/lib/sdk/openjdk21/jvm/openjdk-21/bin/java \
+          -Dsun.java2d.uiScale=2.0 \
+          -jar /app/sieveeditor/SieveEditor.jar "$@"
+        EOF
+
+      # Make launcher executable
+      - chmod +x /app/bin/sieveeditor
+
+      # Install desktop file
+      - install -Dm644 de.febrildur.sieveeditor.desktop /app/share/applications/de.febrildur.sieveeditor.desktop
+
+      # Install icon (if exists)
+      - install -Dm644 de.febrildur.sieveeditor.png /app/share/icons/hicolor/256x256/apps/de.febrildur.sieveeditor.png || true
+
+      # Install appdata/metainfo
+      - install -Dm644 de.febrildur.sieveeditor.metainfo.xml /app/share/metainfo/de.febrildur.sieveeditor.metainfo.xml
+
+    sources:
+      # JAR file from build
+      - type: file
+        path: app/target/SieveEditor-jar-with-dependencies.jar
+
+      # Desktop file
+      - type: file
+        path: flatpak/de.febrildur.sieveeditor.desktop
+
+      # Icon
+      - type: file
+        path: flatpak/de.febrildur.sieveeditor.png
+        dest-filename: de.febrildur.sieveeditor.png
+
+      # AppStream metadata
+      - type: file
+        path: flatpak/de.febrildur.sieveeditor.metainfo.xml
