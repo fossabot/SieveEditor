@@ -124,6 +124,15 @@ if [ "$1" == "--security" ]; then
         echo ""
     fi
 
+    # Check if NVD API key is set
+    if [ -z "$NVD_API_KEY" ]; then
+        echo "⚠️  Warning: NVD API Key not set"
+        echo "   Set NVD_API_KEY environment variable to speed up NVD updates"
+        echo "   Get API key at: https://nvd.nist.gov/developers/request-an-api-key"
+        echo "   Without an API key, the update can take a VERY long time (318K+ records)"
+        echo ""
+    fi
+
     mvn org.owasp:dependency-check-maven:check
     echo "Security report: app/target/dependency-check-report.html"
     echo ""

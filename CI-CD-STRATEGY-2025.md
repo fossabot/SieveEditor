@@ -759,21 +759,35 @@ chmod +x .git/hooks/pre-commit
 
 **OWASP Dependency Check:**
 
-⚠️ **OSS Index Authentication Required** (as of 2025):
-OSS Index now requires authentication for vulnerability scanning. Set up credentials:
+⚠️ **Authentication Required** (as of 2025):
 
-1. **Get OSS Index Token:**
-   - Visit https://ossindex.sonatype.org/
-   - Create an account or sign in
-   - Generate an API token
+**1. OSS Index Authentication (Required):**
+OSS Index now requires authentication for vulnerability scanning.
 
-2. **Set Environment Variables:**
+- **Get OSS Index Token:**
+  - Visit https://ossindex.sonatype.org/
+  - Create an account or sign in
+  - Generate an API token
+
+**2. NVD API Key (Highly Recommended):**
+Without an NVD API key, vulnerability database updates are EXTREMELY slow (318K+ records).
+
+- **Get NVD API Key:**
+  - Visit https://nvd.nist.gov/developers/request-an-api-key
+  - Request an API key (free for non-commercial use)
+  - Receive key via email
+
+**3. Set Environment Variables:**
    ```bash
+   # OSS Index (required)
    export OSSINDEX_USER="your-email@example.com"
-   export OSSINDEX_TOKEN="your-api-token-here"
+   export OSSINDEX_TOKEN="your-ossindex-api-token"
+
+   # NVD API (highly recommended - speeds up updates significantly)
+   export NVD_API_KEY="your-nvd-api-key"
    ```
 
-3. **Run Security Scan:**
+**4. Run Security Scan:**
    ```bash
    # Using test script (recommended)
    ./scripts/test-local.sh --security
@@ -782,6 +796,8 @@ OSS Index now requires authentication for vulnerability scanning. Set up credent
    mvn org.owasp:dependency-check-maven:check
    # Report: app/target/dependency-check-report.html
    ```
+
+**Note:** The CI workflow automatically caches NVD data between runs to minimize download time.
 
 **Check for Outdated Dependencies:**
 ```bash
