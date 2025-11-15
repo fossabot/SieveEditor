@@ -759,45 +759,48 @@ chmod +x .git/hooks/pre-commit
 
 **OWASP Dependency Check:**
 
-⚠️ **Authentication Required** (as of 2025):
+⚠️ **OSS Index Authentication Required** (as of 2025):
 
-**1. OSS Index Authentication (Required):**
-OSS Index now requires authentication for vulnerability scanning.
+**Configuration:**
+This project uses **OSS Index only** for vulnerability scanning (NVD disabled).
 
-- **Get OSS Index Token:**
-  - Visit https://ossindex.sonatype.org/
-  - Create an account or sign in
-  - Generate an API token
+**Why OSS Index Only?**
+- ✅ Fast scans (2-3 minutes vs 10+ minutes with NVD)
+- ✅ No legal notice requirements (NVD requires: "This product uses the NVD API but is not endorsed or certified by the NVD.")
+- ✅ Comprehensive vulnerability coverage from Sonatype
+- ✅ Simple authentication with single token
 
-**2. NVD API Key (Highly Recommended):**
-Without an NVD API key, vulnerability database updates are EXTREMELY slow (318K+ records).
+**Setup:**
 
-- **Get NVD API Key:**
-  - Visit https://nvd.nist.gov/developers/request-an-api-key
-  - Request an API key (free for non-commercial use)
-  - Receive key via email
+**1. Get OSS Index Token:**
+   - Visit https://ossindex.sonatype.org/
+   - Create an account or sign in
+   - Generate an API token
 
-**3. Set Environment Variables:**
+**2. Set Environment Variables:**
    ```bash
-   # OSS Index (required)
    export OSSINDEX_USER="your-email@example.com"
    export OSSINDEX_TOKEN="your-ossindex-api-token"
-
-   # NVD API (highly recommended - speeds up updates significantly)
-   export NVD_API_KEY="your-nvd-api-key"
    ```
 
-**4. Run Security Scan:**
+**3. Run Security Scan:**
    ```bash
    # Using test script (recommended)
    ./scripts/test-local.sh --security
 
    # Or directly with Maven
-   mvn org.owasp:dependency-check-maven:check
+   mvn org.owasp:dependency-check-maven:check \
+       -Danalyzer.nvd.enabled=false \
+       -Danalyzer.ossindex.enabled=true
    # Report: app/target/dependency-check-report.html
    ```
 
-**Note:** The CI workflow automatically caches NVD data between runs to minimize download time.
+**Alternative Configuration:**
+If you prefer to use NVD (slower, requires legal notice), you can enable it:
+```bash
+# Remove -Danalyzer.nvd.enabled=false from the Maven command
+# Optionally add NVD_API_KEY for faster updates
+```
 
 **Check for Outdated Dependencies:**
 ```bash

@@ -117,23 +117,20 @@ if [ "$1" == "--security" ]; then
 
     # Check if OSS Index credentials are set
     if [ -z "$OSSINDEX_USER" ] || [ -z "$OSSINDEX_TOKEN" ]; then
-        echo "⚠️  Warning: OSS Index credentials not set"
+        echo "❌ ERROR: OSS Index credentials required for vulnerability scanning"
         echo "   Set OSSINDEX_USER and OSSINDEX_TOKEN environment variables"
-        echo "   to enable full vulnerability scanning with OSS Index"
         echo "   Get credentials at: https://ossindex.sonatype.org/"
         echo ""
+        exit 1
     fi
 
-    # Check if NVD API key is set
-    if [ -z "$NVD_API_KEY" ]; then
-        echo "⚠️  Warning: NVD API Key not set"
-        echo "   Set NVD_API_KEY environment variable to speed up NVD updates"
-        echo "   Get API key at: https://nvd.nist.gov/developers/request-an-api-key"
-        echo "   Without an API key, the update can take a VERY long time (318K+ records)"
-        echo ""
-    fi
+    echo "ℹ️  Using OSS Index for vulnerability scanning (NVD disabled)"
+    echo "   This avoids NVD legal notice requirements and provides fast scans"
+    echo ""
 
-    mvn org.owasp:dependency-check-maven:check
+    mvn org.owasp:dependency-check-maven:check \
+        -Danalyzer.nvd.enabled=false \
+        -Danalyzer.ossindex.enabled=true
     echo "Security report: app/target/dependency-check-report.html"
     echo ""
 fi

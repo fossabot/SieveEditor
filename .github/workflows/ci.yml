@@ -125,24 +125,25 @@ jobs:
           mvn clean install -DskipTests
         shell: bash
 
-      - name: Cache OWASP Dependency-Check data
+      - name: Cache OWASP Dependency-Check data (OSS Index)
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-owasp-data-${{ github.run_id }}
+          key: ${{ runner.os }}-owasp-ossindex-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-owasp-data-
+            ${{ runner.os }}-owasp-ossindex-
 
-      - name: OWASP Dependency Check
+      - name: OWASP Dependency Check (OSS Index only)
         run: |
           cd app
           mvn org.owasp:dependency-check-maven:check \
             -DfailBuildOnCVSS=7 \
-            -DsuppressionFile=../owasp-suppressions.xml || true
+            -DsuppressionFile=../owasp-suppressions.xml \
+            -Danalyzer.nvd.enabled=false \
+            -Danalyzer.ossindex.enabled=true || true
         env:
           OSSINDEX_USER: ${{ secrets.OSSINDEX_USER }}
           OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         continue-on-error: true  # Don't fail build yet, just report
 
       - name: Upload OWASP report
